@@ -1,0 +1,2 @@
+# scalexcel
+Scala Excel Library
