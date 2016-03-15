@@ -1,5 +1,6 @@
-
 name := "scalexcel"
+
+organization := "scalexcel"
 
 version := "0.1.0"
 
