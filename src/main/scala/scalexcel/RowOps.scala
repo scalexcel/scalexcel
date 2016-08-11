@@ -9,7 +9,7 @@ import scala.util.{Failure, Success, Try}
  */
 trait RowOps extends CellCoords {
 
-  def getRowAsList[T](implicit T: TypeTag[T], sheet: Sheet): List[Any] = {
+  private[scalexcel] def getRowAsList[T](implicit T: TypeTag[T], sheet: Sheet): List[Any] = {
     if (typeOf[T] =:= typeOf[Nothing])
       throw new IllegalArgumentException("a type parameter should be specified in square brackets []")
     else {
@@ -23,6 +23,23 @@ trait RowOps extends CellCoords {
       Reflection.unwrapOpt[T](values.toSeq).toList
     }
   }
+
+  def getRowOf[T](length: Int)(implicit T: TypeTag[T], sheet: Sheet): List[T] = {
+    if (typeOf[T] =:= typeOf[Nothing]) throw new IllegalArgumentException("a type parameter should be specified in square brackets []")
+    else {
+      val values = for (i <- colIdx until colIdx+length) yield ECell(rowIdx, i).get[T]
+      values.toList
+    }
+  }
+
+  def getRowOfOpt[T](length: Int)(implicit T: TypeTag[T], sheet: Sheet): List[Option[T]] = {
+    if (typeOf[T] =:= typeOf[Nothing]) throw new IllegalArgumentException("a type parameter should be specified in square brackets []")
+    else {
+      val values = for (i <- colIdx until colIdx+length) yield ECell(rowIdx, i).getOpt[T]
+      values.toList
+    }
+  }
+
 
   def getRow[T](implicit T: TypeTag[T], sheet: Sheet): T = Reflection.newObject[T](getRowAsList[T])
 

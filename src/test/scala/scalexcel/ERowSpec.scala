@@ -1,4 +1,4 @@
-package org.d5i.excel
+package scalexcel
 
 import org.scalatest._
 import java.util.Date
@@ -65,6 +65,36 @@ class ERowSpec extends FlatSpec with Matchers {
     }
 
   }
+
+  it should "have an ability to read a full row as a List" in {
+    val inputStream = new FileInputStream(fileName)
+
+    excel(inputStream) { implicit workbook =>
+      sheet(sheetName) { implicit sheet =>
+        val res = (1, 1).getRow[PeopleInfo]
+        println(res)
+        res.name should be("Lorem Ipsum")
+
+        val res1 = ECell(1, 1).getRow[PeopleInfo3]
+        println(res1)
+        res1.name should be(Some("Lorem Ipsum"))
+
+        val vp = (1, 0).getRow[PeopleSal2]
+        println(vp)
+        vp.name should be("Lorem Ipsum")
+        vp.probationSal should be(None)
+
+        "A4".getRow[PeopleSal2].probationSal should be(Some(2000.0))
+
+        val res3 = (3, 0).getRow[PeopleSal2]
+        println(res3)
+        res3.name should be("Lorem Ipsum3")
+      }
+    }
+
+  }
+
+
 
   it should "be able to write a row of List" in {
 
