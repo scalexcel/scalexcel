@@ -5,8 +5,8 @@ import org.apache.poi.ss.usermodel.Sheet
 import scala.util.{Failure, Success, Try}
 
 /**
- * Contains Row-related operations
- */
+  * Contains Row-related operations
+  */
 trait RowOps extends CellCoords {
 
   private[scalexcel] def getRowAsList[T](implicit T: TypeTag[T], sheet: Sheet): List[Any] = {
@@ -25,17 +25,21 @@ trait RowOps extends CellCoords {
   }
 
   def getRowOf[T](length: Int)(implicit T: TypeTag[T], sheet: Sheet): List[T] = {
-    if (typeOf[T] =:= typeOf[Nothing]) throw new IllegalArgumentException("a type parameter should be specified in square brackets []")
-    else {
-      val values = for (i <- colIdx until colIdx+length) yield ECell(rowIdx, i).get[T]
+    if (typeOf[T] =:= typeOf[Nothing]) {
+      throw new IllegalArgumentException("a type parameter should be specified in square brackets []")
+    } else {
+      val values = for (i <- colIdx until colIdx + length) yield ECell(rowIdx, i).get[T]
       values.toList
     }
   }
 
+  def getRowOfString(length: Int)(implicit sheet: Sheet): List[String] =
+    (for (i <- colIdx until colIdx + length) yield ECell.getStringForced(rowIdx, i)).toList
+
   def getRowOfOpt[T](length: Int)(implicit T: TypeTag[T], sheet: Sheet): List[Option[T]] = {
     if (typeOf[T] =:= typeOf[Nothing]) throw new IllegalArgumentException("a type parameter should be specified in square brackets []")
     else {
-      val values = for (i <- colIdx until colIdx+length) yield ECell(rowIdx, i).getOpt[T]
+      val values = for (i <- colIdx until colIdx + length) yield ECell(rowIdx, i).getOpt[T]
       values.toList
     }
   }
@@ -62,19 +66,19 @@ trait RowOps extends CellCoords {
     values
   }
 
-  def setRow2(values: Any *)(implicit sheet: Sheet) = {
+  def setRow2(values: Any*)(implicit sheet: Sheet) = {
     setRow(values.toSeq)
     values
   }
 
   /**
-   * Gets any case class and set its values to excel in a row, as specified in default contructor
-   *
-   * @param caseClass case class instance to save to excel
-   * @param sheet implicit sheet
-   * @tparam T type of the case class (or any Product descendant) specified in []
-   * @return a case class (or product descendant) saved to an excel
-   */
+    * Gets any case class and set its values to excel in a row, as specified in default contructor
+    *
+    * @param caseClass case class instance to save to excel
+    * @param sheet     implicit sheet
+    * @tparam T type of the case class (or any Product descendant) specified in []
+    * @return a case class (or product descendant) saved to an excel
+    */
   def setRow[T <: Product](caseClass: T)(implicit sheet: Sheet): T = {
     setRow(caseClass.productIterator.toSeq)
     caseClass

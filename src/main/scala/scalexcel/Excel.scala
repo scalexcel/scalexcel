@@ -74,7 +74,8 @@ object Excel {
     val sh = getOrCreateSheet(workbook, sheetName)
     try {
       block(sh)
-    } finally {}
+    } finally {
+    }
   }
 
   def sheet[T](fileName: String, sheetName: String)(block: Sheet => T): T = {
@@ -115,6 +116,7 @@ object Excel {
   private def workbookBlock[T](wb: Workbook)(block: Workbook => T): T = {
     try {
       block(wb)
-    } finally {}
+    } finally {
+    }
   }
 }

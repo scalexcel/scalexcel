@@ -134,7 +134,7 @@ object ECell {
     DateUtil.isCellDateFormatted(getOrCreateCell(row, col))
   }
   
-  private[scalexcel] def getStringForced(row: Int, col: Int)(implicit sheet: Sheet) = {
+  def getStringForced(row: Int, col: Int)(implicit sheet: Sheet) = {
     val cell = poiCell(row, col)
     val cellType = cell.getCellType
     cell.setCellType(Cell.CELL_TYPE_STRING)
