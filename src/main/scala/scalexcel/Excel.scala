@@ -31,7 +31,7 @@ object Excel {
    * @return          Unit
    */
   def open[T](fileName: String)(block: Workbook => T): T = {
-    excel(fileName, fileName)(block)
+    excel(new FileInputStream(fileName))(block)
   }
 
   class _Workbook(poiWb: Workbook) {
