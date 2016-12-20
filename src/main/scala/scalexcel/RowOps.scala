@@ -16,7 +16,9 @@ trait RowOps extends CellCoords {
       val nameTypeMap = Reflection.caseClassParams[T] // TypeTag[Nothing]
       var colNum = colIdx
       val values = for ((name, atype) <- nameTypeMap) yield {
-        val value = ECell.getByType(atype, rowIdx, colNum)
+        // TODO: just a quick fix
+//        val value = ECell.getByType(atype, rowIdx, colNum)
+        val value = ECell.getByTypeForced(atype, rowIdx, colNum)
         colNum = colNum + 1
         value
       }

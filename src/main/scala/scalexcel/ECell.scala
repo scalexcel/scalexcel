@@ -64,10 +64,37 @@ object ECell {
       " is not supported by this library, please use Double, String, Date, Boolean or Formula instead")
   }
 
+  def maxRowNum(max: Int)(implicit sheet: Sheet): Int = Math.max(max, sheet.getLastRowNum)
+
   // this method is used when instantiating a cell from a list
   private[scalexcel] def getByType(atype: Type, rowIdx: Int, colIdx: Int)(implicit sheet: Sheet): Option[Any] = {
     if (atype =:= typeOf[Double] || atype =:= typeOf[Option[Double]]) new DoubleCell(rowIdx, colIdx).get
     else if (atype =:= typeOf[String] || atype =:= typeOf[Option[String]]) new StrCell[String](rowIdx, colIdx).get
+    else if (atype =:= typeOf[Boolean] || atype =:= typeOf[Option[Boolean]]) new BoolCell[Boolean](rowIdx, colIdx).get
+    else if (atype =:= typeOf[Date] || atype =:= typeOf[Option[Date]]) new DateCell[Date](rowIdx, colIdx).get
+    else if (atype =:= typeOf[Formula] || atype =:= typeOf[Option[Formula]]) new FrmlCell[String](rowIdx, colIdx).get
+    else if (atype =:= typeOf[Nothing]) {
+      // No type was given as value[T], getting a cell type in runtime
+      val cell = poiCell(rowIdx, colIdx)
+      if (cell == null) new EmptyCell[String](rowIdx, colIdx).get
+      else cell.getCellType match {
+        case Cell.CELL_TYPE_BLANK => new EmptyCell[String](rowIdx, colIdx).get
+        case Cell.CELL_TYPE_BOOLEAN => new BoolCell[Boolean](rowIdx, colIdx).get
+        case Cell.CELL_TYPE_ERROR => new ErrCell[Byte](rowIdx, colIdx).get
+        case Cell.CELL_TYPE_FORMULA => new FrmlCell[String](rowIdx, colIdx).get // TODO:??
+        case Cell.CELL_TYPE_NUMERIC =>
+          if (isDateCell(rowIdx, colIdx)) new DateCell[Date](rowIdx, colIdx).get
+          else new DoubleCell(rowIdx, colIdx).get
+        case Cell.CELL_TYPE_STRING => new StrCell[String](rowIdx, colIdx).get
+      }
+    }
+    else throw new IllegalArgumentException("Type " + atype + " is not supported by the library")
+  }
+
+  // TODO: refactor this
+  private[scalexcel] def getByTypeForced(atype: Type, rowIdx: Int, colIdx: Int)(implicit sheet: Sheet): Option[Any] = {
+    if (atype =:= typeOf[Double] || atype =:= typeOf[Option[Double]]) new DoubleCell(rowIdx, colIdx).get
+    else if (atype =:= typeOf[String] || atype =:= typeOf[Option[String]]) new StrCell[String](rowIdx, colIdx).getForced
     else if (atype =:= typeOf[Boolean] || atype =:= typeOf[Option[Boolean]]) new BoolCell[Boolean](rowIdx, colIdx).get
     else if (atype =:= typeOf[Date] || atype =:= typeOf[Option[Date]]) new DateCell[Date](rowIdx, colIdx).get
     else if (atype =:= typeOf[Formula] || atype =:= typeOf[Option[Formula]]) new FrmlCell[String](rowIdx, colIdx).get
@@ -144,6 +171,13 @@ object ECell {
 
     str
   }
+  def getStringForced2(row: Int, col: Int)(implicit sheet: Sheet) = {
+    val cell = poiCell(row, col)
+    val formatter = new DataFormatter()
+
+    val str = formatter.formatCellValue(cell) // TODO: orElse might return a wrong result
+    str
+  }
 }
 
 abstract class BaseCell[T: TypeTag](row: Int, col: Int) {
@@ -176,6 +210,9 @@ case class DoubleCell(row: Int, col: Int) extends BaseCell[Double](row, col) {
   override def set(value: T)(implicit sheet: Sheet): DoubleCell = { poiCell(row, col).setCellValue(value.asInstanceOf[T]); this }
 }
 case class StrCell[T: TypeTag](row: Int, col: Int) extends BaseCell[T](row, col) {
+  def getForced(implicit sheet: Sheet): Option[T] = handleEx(Try(
+    ECell.getStringForced2(row, col)
+  ), row, col)
   override def get(implicit sheet: Sheet): Option[T] = handleEx(Try(poiCell(row, col).getStringCellValue), row, col)
   override def set(value: T)(implicit sheet: Sheet): StrCell[T] = { poiCell(row, col).setCellValue(value.asInstanceOf[String]); this }
 }
